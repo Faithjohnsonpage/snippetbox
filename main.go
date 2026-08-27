@@ -22,7 +22,7 @@ func main() {
 	// Register the two new handler functions and corresponding route patterns with
 	// the servemux, in exactly the same way that we did before.
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", home)
+	mux.HandleFunc("/{$}", home)
 	mux.HandleFunc("/snippet/view", snippetView)
 	mux.HandleFunc("/snippet/create", snippetCreate)
 	log.Print("starting server on :4000")

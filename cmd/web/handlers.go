@@ -65,6 +65,13 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Use the PopString() method to retrieve the value for the "flash" key.
+	// PopString() also deletes the key and value from the session data, so it
+	// acts like a one-time fetch. If there is no matching key in the session
+	// data this will return the empty string.
+	flash := app.sessionManager.PopString(r.Context(), "flash")
+
+	fmt.Fprintf(w, "Flash: %q\n", flash)
 	// Write the snippet data as a plain-text HTTP response body.
 	fmt.Fprintf(w, "%+v", snippet)
 }
@@ -74,18 +81,24 @@ func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
-	// Create some variables holding dummy data. We'll remove these later on
-	// during the build.
-	title := "O snail"
-	content := "O snail\nClimb Mount Fuji,\nBut slowly, slowly!\n\n– Kobayashi Issa"
-	expires := 7
-	// Pass the data to the SnippetModel.Insert() method, receiving the
-	// ID of the new record back.
+	// Instead of hardcoded dummy data, pull from the request itself
+	title := r.PostFormValue("title")
+	content := r.PostFormValue("content")
+
+	expires, err := strconv.Atoi(r.PostFormValue("expires"))
+	if err != nil || expires == 0 {
+		expires = 365 // sensible default/fallback instead of the old fixed 7
+	}
+
 	id, err := app.snippets.Insert(title, content, expires)
 	if err != nil {
 		app.serverError(w, r, err)
 		return
 	}
-	// Redirect the user to the relevant page for the snippet.
+
+	// Use the Put() method to add a string value ("Snippet successfully
+	// created!") and the corresponding key ("flash") to the session data.
+	app.sessionManager.Put(r.Context(), "flash", "Snippet successfully created!")
+
 	http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", id), http.StatusSeeOther)
 }

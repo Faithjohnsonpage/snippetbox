@@ -6,9 +6,12 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"time"
 
 	"faith.practice/internal/models"
 
+	"github.com/alexedwards/scs/mysqlstore"
+	"github.com/alexedwards/scs/v2"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -18,8 +21,9 @@ import (
 // Add a snippets field to the application struct. This will allow us to
 // make the SnippetModel object available to our handlers.
 type application struct {
-	logger   *slog.Logger
-	snippets *models.SnippetModel
+	logger         *slog.Logger
+	snippets       *models.SnippetModel
+	sessionManager *scs.SessionManager
 }
 
 func main() {
@@ -44,13 +48,22 @@ func main() {
 	// before the main() function exits.
 	defer db.Close()
 
+	// Use the scs.New() function to initialize a new session manager. Then we
+	// configure it to use our MySQL database as the session store, and set a
+	// lifetime of 12 hours (so that sessions automatically expire 12 hours
+	// after first being created).
+	sessionManager := scs.New()
+	sessionManager.Store = mysqlstore.New(db)
+	sessionManager.Lifetime = 12 * time.Hour
+
 	// Initialize a new instance of our application struct, containing the
 	// dependencies (for now, just the structured logger).
 	// Initialize a models.SnippetModel instance containing the connection pool
 	// and add it to the application dependencies.
 	app := &application{
-		logger:   logger,
-		snippets: &models.SnippetModel{DB: db},
+		logger:         logger,
+		snippets:       &models.SnippetModel{DB: db},
+		sessionManager: sessionManager,
 	}
 
 	logger.Info("starting server", "addr", *addr)

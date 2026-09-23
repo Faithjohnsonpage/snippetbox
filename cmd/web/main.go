@@ -68,14 +68,27 @@ func main() {
 		sessionManager: sessionManager,
 	}
 
-	logger.Info("starting server", "addr", *addr)
+	// Initialize a new http.Server struct. We set the Addr and Handler fields so
+	// that the server uses the same network address and routes as before.
+	srv := &http.Server{
+		Addr:    *addr,
+		Handler: app.routes(),
+	}
+
+	//logger.Info("starting server", "addr", *addr)
+	logger.Info("starting server", "addr", srv.Addr)
 
 	// Call the new app.routes() method to get the servemux containing our routes,
 	// and pass that to http.ListenAndServe().
 	// Because the err variable is now already declared in the code above, we need
 	// to use the assignment operator = here, instead of the := 'declare and assign'
 	// operator.
-	err = http.ListenAndServe(*addr, app.routes())
+
+	//err = http.ListenAndServe(*addr, app.routes())
+
+	// Call the ListenAndServe() method on our new http.Server struct to start
+	// the server.
+	err = srv.ListenAndServe()
 	logger.Error(err.Error())
 	os.Exit(1)
 }

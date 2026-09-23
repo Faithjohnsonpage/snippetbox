@@ -73,6 +73,11 @@ func main() {
 	srv := &http.Server{
 		Addr:    *addr,
 		Handler: app.routes(),
+		// Create a *log.Logger from our structured logger handler, which writes
+		// log entries at Error level, and assign it to the ErrorLog field. If
+		// you would prefer to log the server errors at Warn level instead, you
+		// could pass slog.LevelWarn as the final parameter.
+		ErrorLog: slog.NewLogLogger(logger.Handler(), slog.LevelError),
 	}
 
 	//logger.Info("starting server", "addr", *addr)

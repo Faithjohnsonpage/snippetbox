@@ -56,6 +56,11 @@ func main() {
 	sessionManager := scs.New()
 	sessionManager.Store = mysqlstore.New(db)
 	sessionManager.Lifetime = 12 * time.Hour
+	// Make sure that the Secure attribute is set on our session cookies.
+	// Setting this means that the cookie will only be sent by a user's web
+	// browser when a HTTPS connection is being used (and won't be sent over an
+	// unsecure HTTP connection).
+	sessionManager.Cookie.Secure = true
 
 	// Initialize a new instance of our application struct, containing the
 	// dependencies (for now, just the structured logger).
@@ -91,9 +96,10 @@ func main() {
 
 	//err = http.ListenAndServe(*addr, app.routes())
 
-	// Call the ListenAndServe() method on our new http.Server struct to start
-	// the server.
-	err = srv.ListenAndServe()
+	// Use the ListenAndServeTLS() method to start the HTTPS server. We
+	// pass in the paths to the TLS certificate and corresponding private key as
+	// the two parameters.
+	err = srv.ListenAndServeTLS("./tls/cert.pem", "./tls/key.pem")
 	logger.Error(err.Error())
 	os.Exit(1)
 }

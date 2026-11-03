@@ -21,6 +21,9 @@ func (app *application) routes() http.Handler {
 	//mux.HandleFunc("GET /snippet/create", app.snippetCreate)
 	//mux.HandleFunc("POST /snippet/create", app.snippetCreatePost)
 
+	// Add a new GET /ping route.
+	mux.HandleFunc("GET /ping", ping)
+
 	// Create a new middleware chain containing the middleware specific to our
 	// dynamic application routes. For now, this chain will only contain the
 	// LoadAndSave session middleware but we'll add more to it later.

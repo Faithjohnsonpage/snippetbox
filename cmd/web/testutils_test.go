@@ -8,13 +8,30 @@ import (
 	"net/http/cookiejar"
 	"net/http/httptest"
 	"testing"
+	"time"
+
+	"faith.practice/internal/models/mocks"
+
+	"github.com/alexedwards/scs/v2"
 )
 
 // Create a newTestApplication helper which returns an instance of our
 // application struct containing mocked dependencies.
 func newTestApplication(t *testing.T) *application {
+
+	// And a session manager instance. Note that we use the same settings as
+	// production, except that we *don't* set a Store for the session manager.
+	// If no store is set, the SCS package will default to using a transient
+	// in-memory store, which is ideal for testing purposes.
+	sessionManager := scs.New()
+	sessionManager.Lifetime = 12 * time.Hour
+	sessionManager.Cookie.Secure = true
+
 	return &application{
-		logger: slog.New(slog.DiscardHandler),
+		logger:         slog.New(slog.DiscardHandler),
+		snippets:       &mocks.SnippetModel{}, // Use the mock.
+		users:          &mocks.UserModel{},    // Use the mock.
+		sessionManager: sessionManager,
 	}
 }
 
